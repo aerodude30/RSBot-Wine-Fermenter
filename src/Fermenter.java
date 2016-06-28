@@ -14,7 +14,7 @@ import java.util.List;
 @Script.Manifest(name = "Wine Fermenter", description = "Converts jugs of water and grapes into fermented wine for fast cooking experience! ")
 public class Fermenter extends PollingScript<ClientContext> {
 
-    List<Task> tasks =  new ArrayList<Task>();
+    List<Task> tasks = new ArrayList<>();
 
 
     @Override
