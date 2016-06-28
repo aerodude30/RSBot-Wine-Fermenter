@@ -7,7 +7,8 @@ RSBot script for repeatedly turning jugs of water into fermented wine for extrem
 - lots of grapes in the bank
 - lots of jugs of water in the bank
 
-## Current Version (1.0.0)
+## Current Version 
+- **1.0.0**
 
 # Version Log 
 
