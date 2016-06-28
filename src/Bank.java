@@ -6,9 +6,9 @@ import org.powerbot.script.rt4.ClientContext;
 
 public class Bank extends Task<ClientContext> {
 
-    private static final int WINE_JUG = 1234;
-    private static final int WATER_JUG = 1234;
-    private static final int GRAPES = 1234;
+    private static final int WINE_JUG = 1993;//or 1994
+    private static final int WATER_JUG = 1937;//or 1938
+    private static final int GRAPES = 1987;//or 1988
 
     public Bank(ClientContext ctx) {
         super(ctx);
@@ -16,7 +16,7 @@ public class Bank extends Task<ClientContext> {
 
     @Override
     public boolean activate() {
-       return !ctx.inventory.contains(ctx.inventory.select().id(1234).poll()); //wine jug
+       return !ctx.inventory.contains(ctx.inventory.select().id(WINE_JUG).poll()); //wine jug
     }
 
     @Override

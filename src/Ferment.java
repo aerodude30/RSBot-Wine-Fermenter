@@ -14,8 +14,8 @@ import java.util.concurrent.Callable;
 public class Ferment extends Task<ClientContext> {
 
     private final Inventory inventory = ctx.inventory;
-    private final Item WATER_JUG = inventory.select().id(1234).poll();
-    private final Item GRAPES = inventory.select().id(1234).poll();
+    private final Item WATER_JUG = inventory.select().id(1937).poll();
+    private final Item GRAPES = inventory.select().id(1987).poll();
     private final Component INVENTORY_COMPONENT = ctx.widgets.component(548, 48);
 
     public Ferment(ClientContext ctx) {
@@ -30,7 +30,12 @@ public class Ferment extends Task<ClientContext> {
     @Override
     public void execute() {
         //make sure inventory tab is open
-        if(!INVENTORY_COMPONENT.visible() && GRAPES.interact("Use", WATER_JUG.name())) {
+        if(!INVENTORY_COMPONENT.visible()) {
+            System.out.println("Opening inventory...");
+            INVENTORY_COMPONENT.click();
+        }
+
+        if(GRAPES.interact("Use", WATER_JUG.name())) {
             System.out.println("Making wine!");
             //while we are making the wines wait
             Condition.wait(new Callable<Boolean>() {
@@ -40,12 +45,7 @@ public class Ferment extends Task<ClientContext> {
                 }
             }, 300, 15);
 
-        } else {
-            System.out.println("Opening inventory...");
-            INVENTORY_COMPONENT.click();
-            //open inventory tab
         }
-
 
         //used to prevent spam clicking
         if (ctx.varpbits.varpbit(1175) > 0) {
