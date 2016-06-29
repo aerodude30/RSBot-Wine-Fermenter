@@ -19,9 +19,8 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
     private static final int WINE_JUG = 1993, WATER_JUG = 1937, GRAPES = 1987;
     private final Component INVENTORY_COMPONENT = ctx.widgets.component(548, 48);
     private long startTime;
-    private String status = ""; //initialize status to blank to avoid potential NPE
+    private String status = "Waiting to start..."; //initialize status to blank to avoid potential NPE
     private int startExperience = 0, currentLevel = 0;
-    //private final Timer RUNTIME = new Timer(0); use RUNTIME.toElapsedString()
     private Util util = new Util();
 
 
@@ -120,44 +119,32 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
         g.setColor(new Color(255, 255, 255));
         g.setFont(new Font("Arial", 0, 11));
         g.drawString("Time Running: " , 13, 48);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
+
         g.drawString("Cooking Exp Gained: ", 14, 65);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
+
         g.drawString("Cooking/hour: ", 14, 84);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
+
         g.drawString("Starting Level: ", 15, 103);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
+
         g.drawString("Current Level: ", 15, 123);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
+
         g.drawString("Status: ", 16, 141);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
 
-        g.drawString(util.runtime(startTime), 83, 43);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
 
-        g.drawString(String.valueOf(expGained), 114, 59);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
+        g.drawString(util.runtime(startTime), 85, 49);
 
-        g.drawString(util.perHour(expGained, startExperience) + "(" + util.formatNumber(expGained), 83, 79);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
 
-        g.drawString(String.valueOf(ctx.skills.level(7)), 88, 96);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
+        g.drawString(String.valueOf(expGained), 120, 65);
 
-        g.drawString(String.valueOf(currentLevel), 84, 118);
-        g.setColor(new Color(255, 255, 255));
-        g.setFont(new Font("Arial", 0, 11));
+        g.drawString(util.perHour(expGained, startExperience) + " (" + util.formatNumber(expGained) + ")", 86, 84);
 
-        g.drawString(status, 52, 135);
+
+        g.drawString(String.valueOf(ctx.skills.level(7)), 90, 103);
+
+
+        g.drawString(String.valueOf(currentLevel), 86, 123);
+
+
+        g.drawString(status, 52, 141);
     }
 }
