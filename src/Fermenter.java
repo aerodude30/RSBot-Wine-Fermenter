@@ -5,10 +5,8 @@ import org.powerbot.script.Script;
 import org.powerbot.script.rt4.ClientContext;
 import org.powerbot.script.rt4.Component;
 import org.powerbot.script.rt4.Item;
-import org.powerbot.script.rt4.ItemQuery;
 
 import java.awt.*;
-import java.util.concurrent.Callable;
 
 /**
  * Created by christianbartram on 6/27/16.
@@ -19,7 +17,8 @@ import java.util.concurrent.Callable;
 public class Fermenter extends PollingScript<ClientContext> implements PaintListener {
 
     private static final int WINE_JUG = 882, WATER_JUG = 1937, GRAPES = 1987; //1993
-    private final ItemQuery<Item> wineItems = ctx.inventory.select().id(WATER_JUG, WINE_JUG); //todo change to grapes
+    private final Item WATER_JUG_ITEM  = ctx.inventory.select().id(1937).poll();
+    private Item GRAPES_ITEM = ctx.inventory.id(882).poll();//todo change to 1987
     private final Component INVENTORY_COMPONENT = ctx.widgets.component(548, 48);
     private long startTime;
     private String status = "Waiting to start...";
@@ -27,17 +26,18 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
     private Util util = new Util();
 
     //enums for each state in the script
-    private enum State { BANK, FERMENT }
+    private enum State {BANK, FERMENT}
 
     private State getState() {
-        //if the inventory contains both grapes and the water jugs then lets make some wine!
-        return ctx.inventory.select().id(WATER_JUG, GRAPES).count() > 0 ? State.FERMENT : State.BANK;
+        return ctx.inventory.select().id(WATER_JUG, WINE_JUG).count() > 0 ? State.FERMENT : State.BANK;
     }
 
     @Override
     public void start() {
         startTime = System.currentTimeMillis();
         startExperience = ctx.skills.experience(7);
+
+        ctx.game.crosshair();
 
         if(!INVENTORY_COMPONENT.visible()) {
             if(ctx.bank.opened()) {
@@ -53,6 +53,7 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
     @Override
     public void poll() {
         final State state = getState();
+        System.out.println(state);
         currentLevel = ctx.skills.level(7);
 
         if(state == null) return;
@@ -70,46 +71,33 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
 
                     status = "Withdrawing ingredients...";
 
-                    //withdraw ingredients to make wine
                     ctx.bank.withdraw(WATER_JUG, 14);
                     ctx.bank.withdraw(WINE_JUG, 14);//todo WINE_JUG change to grapes
 
-                    if(ctx.inventory.select().id(WATER_JUG).count() > 0 && ctx.inventory.select().id(WINE_JUG).count() > 0) { //todo change to grapes
-                        ctx.inventory.select().id(WINE_JUG).poll().interact("Use", ctx.inventory.select().id(WATER_JUG).poll().name()); //todo change WINE_JUG to grapes
 
-                            status = "Making wine!";
-                            ctx.widgets.component(162, 546).interact("Make all");
-
-                            Condition.wait(new Callable<Boolean>() {
-                                @Override
-                                public Boolean call() throws Exception {
-                                    return ctx.inventory.select().id(GRAPES).count() == 0;
-                                }
-                            }, 300, 15);
-
-                        //we have what we need to make some more wine
+                    if(ctx.inventory.select().id(WATER_JUG).count() > 0 && ctx.inventory.select().id(WINE_JUG).count() > 0) { //todo change to GRAPES
                         ctx.bank.close();
                     } else {
-                        status = "Your out of ingredients!";
-                        //ctx.controller.stop();
+                        status = "Error withdrawing items...";
                     }
-                    break;
+                } else {
+                    //if the bank is more than 5 tiles away from the player but it is still visible
+                    if(ctx.bank.inViewport() && ctx.players.local().tile().distanceTo(ctx.bank.nearest()) >= 5) {
+                        status = "Moving closer...";
+                        ctx.movement.step(ctx.bank.nearest());
+                    }
                 }
                 break;
 
             case FERMENT:
-                if(ctx.inventory.select().id(WINE_JUG).poll().interact("Use", ctx.inventory.select().id(WATER_JUG).poll().name())) { //todo change WINE_JUG to grapes
+                status = "Clicking Grapes";
+                ctx.inventory.select().id(1937).poll().interact("Use", ctx.inventory.id(882).poll().name());  //todo change WINE_JUG to grapes
+               // ctx.inventory.id(882).poll().interact("Use", );
 
                     status = "Making wine!";
                     ctx.widgets.component(162, 546).interact("Make all");
+                    Condition.wait(() -> ctx.inventory.select().id(GRAPES).count() == 0, 300, 15);
 
-                    Condition.wait(new Callable<Boolean>() {
-                        @Override
-                        public Boolean call() throws Exception {
-                            return ctx.inventory.select().id(GRAPES).count() == 0;
-                        }
-                    }, 300, 15);
-                }
                 break;
 
             default:
@@ -129,7 +117,6 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
         g.setStroke(new BasicStroke(3));
         g.setColor(new Color(51, 153, 255));
         g.drawRect(3, 3, 175, 145);
-        g.drawLine(MouseInfo.getPointerInfo().getLocation().x, MouseInfo.getPointerInfo().getLocation().y, 20, 20);
         g.setColor(new Color(51, 153, 255));
         g.drawLine(12, 31, 134, 31);
         g.setColor(new Color(255, 255, 255));
