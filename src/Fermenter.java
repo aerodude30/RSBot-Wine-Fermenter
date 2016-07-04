@@ -1,23 +1,28 @@
-import org.powerbot.script.*;
+import org.powerbot.script.Condition;
+import org.powerbot.script.PaintListener;
+import org.powerbot.script.PollingScript;
+import org.powerbot.script.Random;
+import org.powerbot.script.Script;
 import org.powerbot.script.rt4.ClientContext;
 import org.powerbot.script.rt4.Game;
-import org.powerbot.script.rt4.Item;
 import org.powerbot.script.rt4.Npc;
 
 import java.awt.*;
+import java.util.concurrent.Callable;
 
 /**
  * Created by christianbartram on 6/27/16.
  */
 
 
-@Script.Manifest(name = "Wine Fermenter", description = "Converts jugs of water and grapes into fermented wine for fast cooking experience! ")
+@Script.Manifest(name = "Wine Fermenter", description = "Converts jugs of water and grapes into fermented wine for fast cooking experience!")
 public class Fermenter extends PollingScript<ClientContext> implements PaintListener {
 
     private static final int WINE_JUG = 882, WATER_JUG = 1937, GRAPES = 1987; //1993
     private long startTime;
     private String status = "Waiting to start...";
     private int startExperience = 0, currentLevel = 0;
+    private Random rnd = new Random();
     private Util util = new Util();
 
     //enums for each state in the script
@@ -31,6 +36,7 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
     public void start() {
         startTime = System.currentTimeMillis();
         startExperience = ctx.skills.experience(7);
+        System.out.println("Running antipatter");
 
         if(!ctx.game.tab(Game.Tab.INVENTORY)) {
             if(ctx.bank.opened()) {
@@ -57,12 +63,12 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
                     ctx.camera.turnTo(ctx.npcs.select().id(2897, 3227).shuffle().poll());
 
                     //Anti-Pattern Feature to sometimes choose to open the bank booth and sometimes choose to interact with the banker himself
-                    new Random();
                     Boolean bankOrBanker =  Random.nextBoolean();
 
                     if(bankOrBanker) {
                         ctx.bank.open();
                     } else {
+                        status = "Interacting with Banker NPC";
                         final Npc banker = ctx.npcs.select().id(2897).shuffle().poll();
                         ctx.camera.turnTo(banker);
                         banker.interact("Bank", banker.name());
@@ -81,7 +87,8 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
                     if(ctx.inventory.select().id(WATER_JUG).count() > 0 && ctx.inventory.select().id(GRAPES).count() > 0) {
                         ctx.bank.close();
                     } else {
-                        status = "Error withdrawing items...";
+                        status = "Out of required items!";
+                        ctx.controller.stop();
                     }
                 } else {
 
@@ -99,7 +106,15 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
                 ctx.inventory.select().id(1987).poll().click();
 
                 ctx.widgets.component(162, 546).interact("Make all");
-                Condition.wait(() -> ctx.inventory.select().id(GRAPES).count() == 0, 300, 15);
+
+                //SDN compiles on Java 6 (no lambda)
+                Condition.wait(new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        new AntiPattern(Random.nextBoolean());
+                        return ctx.inventory.select().id(GRAPES).count() == 0;
+                    }
+                }, 300, 15);
 
                 break;
 
