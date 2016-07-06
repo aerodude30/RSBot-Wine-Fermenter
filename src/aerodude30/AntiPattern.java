@@ -1,3 +1,5 @@
+package aerodude30;
+
 import org.powerbot.script.Condition;
 import org.powerbot.script.Random;
 

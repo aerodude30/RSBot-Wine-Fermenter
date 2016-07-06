@@ -1,3 +1,5 @@
+package aerodude30;
+
 import org.powerbot.script.Condition;
 import org.powerbot.script.PaintListener;
 import org.powerbot.script.PollingScript;
@@ -8,22 +10,22 @@ import org.powerbot.script.rt4.Game;
 import org.powerbot.script.rt4.Npc;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.concurrent.Callable;
 
 /**
  * Created by christianbartram on 6/27/16.
  */
-
-
-@Script.Manifest(name = "Wine Fermenter", description = "Converts jugs of water and grapes into fermented wine for fast cooking experience!")
+@Script.Manifest(name = "Wine Fermenter", description = "Converts jugs of water and grapes into fermented wine for fast cooking experience!", properties = "author=aerodude30; topic=1316401; client=4;")
 public class Fermenter extends PollingScript<ClientContext> implements PaintListener {
 
-    private static final int WINE_JUG = 882, WATER_JUG = 1937, GRAPES = 1987; //1993
+    private static final int WATER_JUG = 1937, GRAPES = 1987; //1993
     private long startTime;
     private String status = "Waiting to start...";
     private int startExperience = 0, currentLevel = 0;
     private Random rnd = new Random();
     private Util util = new Util();
+    Controller controller = ctx.controller;
 
     //enums for each state in the script
     private enum State {BANK, FERMENT}
@@ -36,7 +38,26 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
     public void start() {
         startTime = System.currentTimeMillis();
         startExperience = ctx.skills.experience(7);
-        System.out.println("Running antipatter");
+
+        GUI g = new GUI();
+        g.pack();
+        g.setVisible(true);
+
+        try {
+            new JSB().initialize("Wine aerodude30.Fermenter", "1.0", status, g.username.getText(), g.email.getText(), "sk_live_82c064b0dd1c62ba83bca66634ab8c42")
+                    .actionListener(new Actionable() {
+                        @Override
+                        public void customScriptAction() {
+                            bank();
+                        }
+                    }, "Emergency Bank")
+                    .setSkillExperience("Cooking", ctx.skills.experience(7) - startExperience)
+                    .sendData()
+                    .onStop(true);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         if(!ctx.game.tab(Game.Tab.INVENTORY)) {
             if(ctx.bank.opened()) {
@@ -88,7 +109,7 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
                         ctx.bank.close();
                     } else {
                         status = "Out of required items!";
-                        ctx.controller.stop();
+                       // ctx.controller.stop();
                     }
                 } else {
 
@@ -123,6 +144,46 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
         }
     }
 
+    /**
+     * Aeroscripts Bank method(). This method executes when a user using Aeroscripts
+     * clicks the script action button bank.
+     */
+    public void bank() {
+        System.out.println("Banking....");
+        Boolean bankOrBanker =  Random.nextBoolean();
+
+        if(bankOrBanker) {
+            ctx.bank.open();
+        } else {
+            status = "Interacting with Banker NPC";
+            final Npc banker = ctx.npcs.select().id(2897).shuffle().poll();
+            ctx.camera.turnTo(banker);
+            banker.interact("Bank", banker.name());
+        }
+
+        if(ctx.inventory.count() != 0){
+            ctx.bank.depositInventory();
+        }
+
+        status = "Withdrawing ingredients...";
+
+        ctx.bank.withdraw(WATER_JUG, 14);
+        ctx.bank.withdraw(GRAPES, 14);
+
+
+        if(ctx.inventory.select().id(WATER_JUG).count() > 0 && ctx.inventory.select().id(GRAPES).count() > 0) {
+            ctx.bank.close();
+        } else {
+            status = "Out of required items!";
+            controller.stop();
+        }
+
+        if(ctx.players.local().tile().distanceTo(ctx.bank.nearest()) >= 5) {
+            status = "Moving closer...";
+            ctx.movement.step(ctx.bank.nearest());
+        }
+    }
+
 
     @Override
     public void repaint(Graphics graphics) {
@@ -139,7 +200,7 @@ public class Fermenter extends PollingScript<ClientContext> implements PaintList
         g.drawLine(12, 31, 134, 31);
         g.setColor(new Color(255, 255, 255));
         g.setFont(new Font("Arial", 0, 14));
-        g.drawString("Wine Fermenter", 19, 25);
+        g.drawString("Wine aerodude30.Fermenter", 19, 25);
         g.setColor(new Color(255, 255, 255));
         g.setFont(new Font("Arial", 0, 11));
         g.drawString("Time Running: " , 13, 48);
