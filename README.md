@@ -1,4 +1,4 @@
-# RSBot-Wine-aerodude30.Fermenter
+# RSBot-Wine-Fermenter
 
 RSBot script for repeatedly turning jugs of water into fermented wine for extremely fast cooking experience.
 
